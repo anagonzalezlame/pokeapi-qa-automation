@@ -84,6 +84,12 @@ After a run, open `target/cucumber-reports/cucumber.html` in a browser to see th
 
 The workflow in `.github/workflows/tests.yml` runs the full suite on every push to `main`, on pull requests, every Monday and on demand. A manual run accepts a tag expression, so it can run only `@smoke` or skip `@performance`. The Cucumber report is uploaded as an artifact of each run.
 
+**Current status:** all 28 scenarios (18 API, 10 UI) pass on GitHub Actions, with the full suite taking about 20 seconds. The badge at the top of this page shows the result of the latest run.
+
+- **See every run and its logs:** [Actions tab](https://github.com/anagonzalezlame/pokeapi-qa-automation/actions/workflows/tests.yml).
+- **Run it manually:** open the Actions tab, choose **Tests**, click **Run workflow** and optionally type a tag expression such as `@smoke`.
+- **Read the report of a run:** open the run, download the `cucumber-report` artifact, unzip it and open `cucumber.html`. Failed UI scenarios include a full-page screenshot.
+
 ## Design decisions
 
 - **Readable scenarios first.** Steps describe behaviour ("I request the type fire") instead of HTTP details, so the feature files work as living documentation.
@@ -91,6 +97,18 @@ The workflow in `.github/workflows/tests.yml` runs the full suite on every push 
 - **Isolation.** Each UI scenario runs in a fresh browser context and each API scenario keeps its own response, so scenarios can run in any order.
 - **Explicit waits on real events.** The home page fires a request for `pokemon/ditto` on load, and its HTML already shows "Resource for ditto" before that request starts. Reading the site's source showed that a slow first response could overwrite a newer search result, so `HomePage.open()` waits for that specific response before any interaction. This removes a source of flaky tests and is also worth reporting as a possible race condition in the site.
 - **Live data assumptions are kept small.** Assertions use stable facts (Pikachu is id 25, Fire is strong against Grass) and ranges where data can grow (the total Pokemon count only needs to be above 1000).
+
+## Lessons learned
+
+**A regex that is valid in Java can fail in the browser.** On the first CI run, the 4 navigation scenarios failed even though the browser was on the right page:
+
+```
+Page URL expected to match regex
+Expected: .*\Q/about\E.*
+       - unexpected value "https://pokeapi.co/about"
+```
+
+The URL check was built with Java's `Pattern.quote()`, which wraps the text in `\Q...\E`. Playwright sends the regex to the browser and evaluates it in JavaScript, where `\Q...\E` does not exist, so the pattern never matched. The fix in `UiSteps.urlShouldContain()` escapes each special character with a backslash, a form both languages understand. The takeaway: when a tool runs part of the test in another engine, every value handed over to it has to be valid in that engine as well.
 
 ## Author
 
