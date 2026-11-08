@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "PokeAPI v2 - Pokemon (main fields)",
+  "type": "object",
+  "required": ["id", "name", "height", "weight", "base_experience", "abilities", "types", "stats", "sprites", "species"],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "height": { "type": "integer", "minimum": 0 },
+    "weight": { "type": "integer", "minimum": 0 },
+    "base_experience": { "type": ["integer", "null"] },
+    "is_default": { "type": "boolean" },
+    "abilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["ability", "is_hidden", "slot"],
+        "properties": {
+          "ability": { "$ref": "#/definitions/namedResource" },
+          "is_hidden": { "type": "boolean" },
+          "slot": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "types": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["slot", "type"],
+        "properties": {
+          "slot": { "type": "integer", "minimum": 1 },
+          "type": { "$ref": "#/definitions/namedResource" }
+        }
+      }
+    },
+    "stats": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["base_stat", "effort", "stat"],
+        "properties": {
+          "base_stat": { "type": "integer", "minimum": 1 },
+          "effort": { "type": "integer", "minimum": 0 },
+          "stat": { "$ref": "#/definitions/namedResource" }
+        }
+      }
+    },
+    "sprites": {
+      "type": "object",
+      "required": ["front_default"],
+      "properties": {
+        "front_default": { "type": ["string", "null"] }
+      }
+    },
+    "species": { "$ref": "#/definitions/namedResource" }
+  },
+  "definitions": {
+    "namedResource": {
+      "type": "object",
+      "required": ["name", "url"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "pattern": "^https://pokeapi\\.co/api/v2/" }
+      }
+    }
+  }
+}
