@@ -79,6 +79,9 @@ public class UiSteps {
 
     @Then("the URL should contain {string}")
     public void urlShouldContain(String fragment) {
-        assertThat(page()).hasURL(Pattern.compile(".*" + Pattern.quote(fragment) + ".*"));
+        // Playwright evaluates the regex in the browser (JavaScript), which does not support
+        // Java's Pattern.quote() syntax (\Q...\E), so special characters are escaped one by one.
+        String escaped = fragment.replaceAll("[^A-Za-z0-9]", "\\\\$0");
+        assertThat(page()).hasURL(Pattern.compile(".*" + escaped + ".*"));
     }
 }
